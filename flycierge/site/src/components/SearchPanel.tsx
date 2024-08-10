@@ -16,11 +16,6 @@ const useStyles = tss.create({
             backgroundColor: 'white'
           },
         alignItems: 'center',
-        // backgroundColor: 'white',
-        // borderStyle: 'solid',
-        // borderWidth: 1,
-        // borderColor: 'grey',
-        // borderRadius: 2
     }
 })
 
