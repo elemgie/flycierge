@@ -1,0 +1,24 @@
+package com.mgieroba.flycierge.model;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+import java.util.List;
+
+@Getter
+@Setter
+@SuperBuilder
+public class Itinerary {
+    protected long itineraryId;
+    protected List<Flight> outboundFlights;
+    protected List<Flight> returnFlights;
+
+    public String getOrigin() {
+        return outboundFlights.getFirst().getOrigin();
+    }
+
+    public String getDestination() {
+        return outboundFlights.getLast().getDestination();
+    }
+}
