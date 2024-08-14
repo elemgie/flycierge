@@ -47,8 +47,9 @@ function PureSearchPanel({ onSearch } : SearchPanelProps) {
 
     const handleSearchClick = useCallback(() => {
         if (departureDate) {
-            onSearch({origin, destination, departureDate, returnDate, adultNumber});
-        }
+            onSearch({origin, destination, departureDate: departureDate.format('YYYY-MM-DD'),
+                returnDate: returnDate?.format('YYYY-MM-DD') || null, adultNumber});
+            }
     }, [origin, destination, departureDate, returnDate, adultNumber]);
 
     const [open, setOpen] = useState(false);
