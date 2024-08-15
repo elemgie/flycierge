@@ -2,9 +2,11 @@ package com.mgieroba.flycierge.controller;
 
 import com.mgieroba.flycierge.model.Airline;
 import com.mgieroba.flycierge.model.Airport;
-import com.mgieroba.flycierge.model.search.DestinationSearch;
 import com.mgieroba.flycierge.model.RichItinerary;
+import com.mgieroba.flycierge.model.RoutePriceMetric;
+import com.mgieroba.flycierge.model.search.DestinationSearch;
 import com.mgieroba.flycierge.model.search.Search;
+import com.mgieroba.flycierge.model.search.SearchResult;
 import com.mgieroba.flycierge.repository.AirlineRepository;
 import com.mgieroba.flycierge.repository.AirportRepository;
 import com.mgieroba.flycierge.repository.SearchRepository;
@@ -15,9 +17,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @AllArgsConstructor
@@ -29,18 +31,19 @@ public class SearchController {
     private final AirlineRepository airlineRepository;
 
     @PostMapping("/search")
-    public List<RichItinerary> search(@RequestBody Search searchRequest) {
+    public SearchResult search(@RequestBody Search searchRequest) {
         searchRequest.setCreateTs(getNowTs());
         Search search = searchRepository.create(searchRequest);
-        List<RichItinerary> itineraries = queryResolver.findItineraries(search);
-//      price history download
-        return itineraries;
+        CompletableFuture<List<RichItinerary>> itinerariesFuture = queryResolver.findItineraries(search);
+        CompletableFuture<RoutePriceMetric> priceMetricsFuture = queryResolver.calculateRoutePriceMetricsForSearch(search);
+
+        return new SearchResult(itinerariesFuture.join(), priceMetricsFuture.join());
     }
 
     @PostMapping("/search-destination")
-    public List<RichItinerary> searchDestination(@RequestBody DestinationSearch searchRequest) {
+    public SearchResult searchDestination(@RequestBody DestinationSearch searchRequest) {
         searchRequest.setCreateTs(getNowTs());
-        return queryResolver.findDestinations(searchRequest);
+        return new SearchResult(queryResolver.findDestinations(searchRequest), null);
     }
 
     @GetMapping("/airports")
@@ -54,6 +57,6 @@ public class SearchController {
     }
 
     private long getNowTs() {
-        return LocalDateTime.now().atZone(ZoneId.of("Europe/Warsaw")).toEpochSecond();
+        return Instant.now().getEpochSecond();
     }
 }

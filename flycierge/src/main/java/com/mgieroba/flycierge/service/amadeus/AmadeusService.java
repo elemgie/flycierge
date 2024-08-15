@@ -3,30 +3,33 @@ package com.mgieroba.flycierge.service.amadeus;
 import com.amadeus.Amadeus;
 import com.amadeus.Params;
 import com.amadeus.exceptions.ResponseException;
-import com.amadeus.referenceData.Locations;
 import com.amadeus.resources.FlightOfferSearch;
-import com.amadeus.resources.Location;
-import com.mgieroba.flycierge.model.Airport;
+import com.amadeus.resources.ItineraryPriceMetric;
 import com.mgieroba.flycierge.model.Flight;
 import com.mgieroba.flycierge.model.Price;
 import com.mgieroba.flycierge.model.RichItinerary;
-import com.mgieroba.flycierge.model.search.DestinationSearch;
+import com.mgieroba.flycierge.model.RoutePriceMetric;
+import com.mgieroba.flycierge.model.exception.ExternalServiceOriginNotSupportedException;
 import com.mgieroba.flycierge.model.search.Search;
-import com.mgieroba.flycierge.service.DestinationSearchService;
 import com.mgieroba.flycierge.service.FlightSearchService;
+import com.mgieroba.flycierge.service.PriceMetricSearchService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class AmadeusService implements FlightSearchService, DestinationSearchService {
+public class AmadeusService implements FlightSearchService, PriceMetricSearchService {
 
     private final Amadeus amadeus;
+    private final String AMADEUS_NOT_SUPPORTED_ROUTE_CODE = "22443";
 
     public AmadeusService(
         @Value("${amadeus.clientId}") String amadeusClientId,
@@ -38,33 +41,13 @@ public class AmadeusService implements FlightSearchService, DestinationSearchSer
             .build();
     }
 
-    public List<Airport> findAirports(String keyword) {
-        try {
-            Location[] fetchedLocations = amadeus.referenceData.locations.get(Params
-                .with("keyword", keyword)
-                .and("subType", Locations.AIRPORT));
-            return Arrays.stream(fetchedLocations).map(location -> Airport.builder()
-                .iataCode(location.getIataCode())
-                .name(location.getName())
-                .city(location.getAddress().getCityName())
-                .country(location.getAddress().getCountryName())
-                .countryCode(location.getAddress().getCountryCode())
-                .build())
-            .toList();
-        } catch (ResponseException exc) {
-            log.error("Error while searching airports for {}", keyword, exc);
-            throw new RuntimeException(exc);
-        }
-    }
-
     public List<RichItinerary> findOffers(Search search) throws RuntimeException {
         try {
             Params amadeusRequestParams = Params
                 .with("originLocationCode", search.getOrigin())
                 .and("destinationLocationCode", search.getDestination())
                 .and("departureDate", search.getDepartureDate().toString())
-                .and("adults", search.getAdultNumber())
-                .and("nonStop", search.isDirect());
+                .and("adults", search.getAdultNumber());
             if (search.getReturnDate() != null) {
                 amadeusRequestParams = amadeusRequestParams.and("returnDate", search.getReturnDate().toString());
             }
@@ -77,13 +60,58 @@ public class AmadeusService implements FlightSearchService, DestinationSearchSer
         }
     }
 
-    public List<RichItinerary> findDestinations(DestinationSearch search) {
-        return List.of();
+    public RoutePriceMetric getPriceMetric(Search search) throws ExternalServiceOriginNotSupportedException {
+        try {
+            Params amadeusRequestParams = Params
+                .with("originIataCode", search.getOrigin())
+                .and("destinationIataCode", search.getDestination())
+                .and("departureDate", search.getDepartureDate())
+                .and("oneWay", !search.isReturn());
+
+            ItineraryPriceMetric[] priceMetrics = amadeus.analytics.itineraryPriceMetrics.get(amadeusRequestParams);
+
+            if (priceMetrics.length == 0) {
+                throw new ExternalServiceOriginNotSupportedException();
+            }
+
+            List<RoutePriceMetric> parsedPriceMetrics = Arrays.stream(priceMetrics).map(this::parsePriceMetric).toList();
+
+            // API returns list but nowhere is it specified why would there be more than one record
+            // It hasn't yet occurred for it to return more than one record
+            return parsedPriceMetrics.getFirst();
+
+        } catch (ResponseException exc) {
+            if (exc.getCode().equals(AMADEUS_NOT_SUPPORTED_ROUTE_CODE)) {
+                throw new ExternalServiceOriginNotSupportedException();
+            } else {
+                throw new RuntimeException(exc);
+            }
+        }
+    }
+
+    private RoutePriceMetric parsePriceMetric(ItineraryPriceMetric metric) {
+        Map<String, Double> priceQuartiles = Arrays.stream(metric.getPriceMetrics())
+            .collect(Collectors.toMap(
+                ItineraryPriceMetric.PriceMetrics::getQuartileRanking,
+                pm -> Double.parseDouble(pm.getAmount())
+            ));
+        return RoutePriceMetric.builder()
+            .origin(metric.getOrigin().getIataCode())
+            .destination(metric.getDestination().getIataCode())
+            .departureDate(LocalDate.parse(metric.getDepartureDate()))
+            .oneWay(metric.getOneWay())
+            .currency(metric.getCurrencyCode())
+            .minimalValue(priceQuartiles.get("MINIMUM"))
+            .firstQuartile(priceQuartiles.get("FIRST"))
+            .secondQuartile(priceQuartiles.get("MEDIUM"))
+            .thirdQuartile(priceQuartiles.get("THIRD"))
+            .maximalValue(priceQuartiles.get("MAXIMUM"))
+            .build();
     }
 
     private RichItinerary parseFlightOfferSearch(FlightOfferSearch search) {
         List<FlightOfferSearch.Itinerary> itineraries = Arrays.asList(search.getItineraries());
-        List<Flight> destinationFlights = Arrays.stream(itineraries.getFirst().getSegments())
+        List<Flight> outboundFlights = Arrays.stream(itineraries.getFirst().getSegments())
             .map(this::parseFlight).toList();
         List<Flight> returnFlights = itineraries.size() == 1 ? List.of() :
             Arrays.stream(itineraries.getLast().getSegments()).map(this::parseFlight).toList();
@@ -92,7 +120,7 @@ public class AmadeusService implements FlightSearchService, DestinationSearchSer
             .currency(search.getPrice().getCurrency())
             .build();
         return RichItinerary.builder()
-            .outboundFlights(destinationFlights)
+            .outboundFlights(outboundFlights)
             .returnFlights(returnFlights)
             .price(price)
             .build();

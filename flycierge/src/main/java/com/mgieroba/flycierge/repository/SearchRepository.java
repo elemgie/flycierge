@@ -37,4 +37,17 @@ public class SearchRepository {
             .query(Search.class)
             .single();
     }
+
+//    public Search saveSearchResult(long searchId, JSONObject result) {
+//        String sql = """
+//            UPDATE search SET result = :result
+//            WHERE search_id = :search_id
+//            RETURNING *
+//            """;
+//        return db.sql(sql)
+//            .param("result", result)
+//            .param("search_id", searchId)
+//            .query(Search.class)
+//            .single();
+//    }
 }

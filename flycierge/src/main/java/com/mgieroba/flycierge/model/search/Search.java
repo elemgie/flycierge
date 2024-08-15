@@ -14,7 +14,6 @@ public class Search {
     private LocalDate departureDate;
     private LocalDate returnDate;
     private int adultNumber;
-    private boolean direct = false;
     private long createTs;
 
     public boolean isReturn() {
