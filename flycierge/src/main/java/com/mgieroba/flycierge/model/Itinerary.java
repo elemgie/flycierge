@@ -13,6 +13,7 @@ public class Itinerary {
     protected long itineraryId;
     protected List<Flight> outboundFlights;
     protected List<Flight> returnFlights;
+    protected String flightsHash;
 
     public String getOrigin() {
         return outboundFlights.getFirst().getOrigin();

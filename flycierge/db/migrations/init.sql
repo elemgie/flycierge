@@ -17,8 +17,8 @@ CREATE TABLE airport (
 CREATE TABLE airline (
     airline_id BIGINT PRIMARY KEY DEFAULT nextval('the_sequence'),
     name VARCHAR(1024) NOT NULL,
-    iata_code CHAR(2) UNIQUE,
-    icao_code CHAR(3) UNIQUE,
+    iata_code CHAR(2) UNIQUE NOT NULL,
+    icao_code CHAR(3) UNIQUE NOT NULL,
     logo_url VARCHAR(2048)
 );
 
@@ -40,12 +40,14 @@ CREATE TABLE flight (
     airline VARCHAR(128) NOT NULL REFERENCES airline(iata_code),
     start_date_time TIMESTAMP NOT NULL,
     landing_date_time TIMESTAMP NOT NULL,
+    create_ts BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
     UNIQUE (origin, destination, airline, number, start_date_time)
 );
 
 CREATE TABLE itinerary (
     itinerary_id BIGINT PRIMARY KEY DEFAULT nextval('the_sequence'),
-    create_ts BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())
+    create_ts BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
+    flights_hash VARCHAR(400) UNIQUE NOT NULL
 );
 
 CREATE TABLE itinerary_flight (
