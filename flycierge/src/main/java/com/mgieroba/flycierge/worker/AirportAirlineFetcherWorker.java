@@ -7,6 +7,7 @@ import com.mgieroba.flycierge.repository.AirportRepository;
 import com.mgieroba.flycierge.service.cirium.CiriumService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public class AirportAirlineFetcherWorker {
 
     private CiriumService ciriumClient;
 
-//    @Scheduled(fixedDelayString="P30D", initialDelayString="PT30M")
+    @Scheduled(fixedDelayString="P30D", initialDelayString="PT30M")
     public void refreshAirports() {
         log.info("Beginning refreshing airports");
         List<Airport> fetchedAirports = ciriumClient.fetchAirports();
@@ -29,7 +30,7 @@ public class AirportAirlineFetcherWorker {
         log.info("Successfully refreshed airports");
     }
 
-//    @Scheduled(fixedDelayString="P30D", initialDelayString="PT31M")
+    @Scheduled(fixedDelayString="P30D", initialDelayString="PT31M")
     public void refreshAirlines() {
         log.info("Beginning refreshing airlines");
         List<Airline> fetchedAirlines = ciriumClient.fetchAirlines();
