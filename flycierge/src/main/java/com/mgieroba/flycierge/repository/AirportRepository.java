@@ -54,4 +54,14 @@ public class AirportRepository {
             .query(Airport.class)
             .list();
     }
+
+    public void bumpSearchCount(String airportIataCode) {
+        String sql = """
+            UPDATE airport SET search_count = search_count + 1
+            WHERE iata_code = :iata_code
+            """;
+        db.sql(sql)
+            .param("iata_code", airportIataCode)
+            .update();
+    }
 }

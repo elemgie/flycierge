@@ -34,6 +34,8 @@ public class SearchController {
     public SearchResult search(@RequestBody Search searchRequest) {
         searchRequest.setCreateTs(getNowTs());
         Search search = searchRepository.create(searchRequest);
+        airportRepository.bumpSearchCount(searchRequest.getOrigin());
+
         CompletableFuture<List<RichItinerary>> itinerariesFuture = queryResolver.findItineraries(search);
         CompletableFuture<RoutePriceMetric> priceMetricsFuture = queryResolver.calculateRoutePriceMetricsForSearch(search);
 
@@ -43,6 +45,8 @@ public class SearchController {
     @PostMapping("/search-destination")
     public SearchResult searchDestination(@RequestBody DestinationSearch searchRequest) {
         searchRequest.setCreateTs(getNowTs());
+        airportRepository.bumpSearchCount(searchRequest.getOrigin());
+
         return new SearchResult(queryResolver.findDestinations(searchRequest), null);
     }
 

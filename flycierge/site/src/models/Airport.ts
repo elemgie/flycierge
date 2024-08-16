@@ -5,5 +5,7 @@ export type Airport = {
     icaoCode: string;
     country: string;
     countryCode: string;
+    city: string;
     timeZoneRegionName: string;
+    searchCount: number;
 }

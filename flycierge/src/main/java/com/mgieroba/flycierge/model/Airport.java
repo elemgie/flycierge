@@ -16,4 +16,5 @@ public class Airport {
     private double longitude;
     private double latitude;
     private String timeZoneRegionName;
+    private long searchCount;
 }

@@ -1,0 +1,1 @@
+ALTER TABLE airport ADD COLUMN search_count BIGINT NOT NULL DEFAULT 0;
