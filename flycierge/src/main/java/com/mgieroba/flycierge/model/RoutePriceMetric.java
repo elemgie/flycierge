@@ -8,7 +8,7 @@ import java.time.LocalDate;
 @Builder
 @Getter
 public class RoutePriceMetric {
-    private double routePriceMetricId;
+    private long routePriceMetricId;
     private String origin;
     private String destination;
     private LocalDate departureDate;
