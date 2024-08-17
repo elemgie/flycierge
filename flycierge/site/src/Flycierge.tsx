@@ -2,9 +2,11 @@ import  { useCallback, useState, useEffect } from 'react';
 import { tss } from 'tss-react';
 import Grid from '@mui/material/Grid';
 
-import { SearchPanel, TopBar, ItineraryPanel } from "components";
-import { SearchParams, Itinerary } from 'models';
-import { Client } from 'client';
+import { SearchPanel, TopBar, ItineraryPanel } from 'components';
+import { SearchResult } from 'models';
+
+import Typography from '@mui/material/Typography';
+
 import moment from 'moment';
 import 'moment/locale/en-gb';
 
@@ -23,37 +25,20 @@ const useStyles = tss.create({
   searchPanel: {
     maxWidth: "100%",
     display: 'flex',
-    margin: '16px'
+    margin: '8px'
   },
-  itineraryPanel: {
+  mainPanel: {
+    display: 'flex',
+    flexDirection: 'row'
   }
 });
 
 function Flycierge() {
   const { classes } = useStyles();
-
-  const client = new Client(process.env.REACT_APP_SERVER_URL as string);
   moment.locale('en-gb');
 
-  const [searchResults, setSearchResults] = useState<Itinerary[] | null>(null);
-
-  const handleSearch = useCallback(async (params: SearchParams) => {
-    const response = await client.fetchData<any[]>('/search', 'POST', params);
-    response.forEach(it => it.outboundFlights.forEach((fl: any) => {
-      fl.startDateTime = moment(fl.startDateTime, 'YYYY-MM-DDTHH:mm:ss');
-      fl.landingDateTime = moment(fl.landingDateTime, 'YYYY-MM-DDTHH:mm:ss');
-    }));
-    response.forEach(it => {
-      if (it.returnFlights) { 
-        it.returnFlights.forEach((fl: any) => {
-          fl.startDateTime = moment(fl.startDateTime, 'YYYY-MM-DDTHH:mm:ss');
-          fl.landingDateTime = moment(fl.landingDateTime, 'YYYY-MM-DDTHH:mm:ss');
-        });
-      }
-    });
-    setSearchResults(response);
-  }, [client]);
-
+  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
+  const [isFetching, setIsFetching] = useState<boolean>(false);
 
   return (
     <Grid className={classes.mainContainer}>
@@ -61,10 +46,10 @@ function Flycierge() {
         <TopBar />
       </div>
       <div className={classes.searchPanel}>
-        <SearchPanel onSearch={handleSearch}/>
+        <SearchPanel setIsFetching={setIsFetching} setSearchResult={setSearchResult} isFetching={isFetching}/>
       </div>
-      <div className={classes.itineraryPanel}>
-        <ItineraryPanel itineraries={searchResults}/>
+      <div className={classes.mainPanel}>
+        <ItineraryPanel itineraries={searchResult?.itineraries || null} isFetching={isFetching} showFullDates/>
       </div>
     </Grid>
   );

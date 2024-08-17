@@ -1,10 +1,27 @@
-import { Moment } from 'moment';
+import { Itinerary, PriceMetric } from 'models';
 
-
-export type SearchParams = {
+export type SimpleSearchParams = {
     origin: string;
     destination: string;
     departureDate: string;
     returnDate: string | null;
     adultNumber: number;
+}
+
+export type DestinationSearchParams = {
+    origin: string;
+    departureRangeStart: string;
+    departureRangeEnd: string;
+    adultNumber: number;
+    isReturn: boolean;
+}
+
+export type SearchResult = {
+    itineraries: Itinerary[];
+    priceMetric: PriceMetric | null;
+}
+
+export const EMPTY_SEARCH_RESPONSE = {
+    itineraries: [],
+    priceMetric: null
 }

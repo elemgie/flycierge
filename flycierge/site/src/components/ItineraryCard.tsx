@@ -115,9 +115,10 @@ const LayoverTooltip = React.memo(PureLayoverTooltip);
 
 interface OneWayFlightsCardProps {
     flights: Flight[];
+    showFullDates?: boolean;
 }
 
-function PureOneWayFlightsCard({ flights }: OneWayFlightsCardProps) {
+function PureOneWayFlightsCard({ flights, showFullDates }: OneWayFlightsCardProps) {
     const { classes } = useStyles();
 
     const airportsMap = useContext(AirportContext);
@@ -132,6 +133,8 @@ function PureOneWayFlightsCard({ flights }: OneWayFlightsCardProps) {
 
     const lastFlight = useMemo(() => flights[flights.length - 1], [flights]);
 
+    const dateFormat = useMemo(() => showFullDates ? "DD.MM HH:mm" : "HH:mm", [showFullDates]);
+
     return <Box display='flex' flexDirection='row'>
             <Box className={classes.airlineBox}>
                 <Typography className={classes.airlineTypography} variant='body2'>{Array.from(airlines).join(' + ')}</Typography>
@@ -139,7 +142,7 @@ function PureOneWayFlightsCard({ flights }: OneWayFlightsCardProps) {
             <Box className={classes.flightsBox}>
                 <Box className={classes.locations}>
                     <Tooltip title={airportsMap[flights[0].origin]?.name}>
-                        <Typography>{flights[0].origin}</Typography>
+                        <Typography width='11%'  display='flex'>{flights[0].origin}</Typography>
                     </Tooltip>
                     <Divider flexItem className={classes.locationsDivider}>
                         {isDirectFlight(flights) ?
@@ -150,13 +153,13 @@ function PureOneWayFlightsCard({ flights }: OneWayFlightsCardProps) {
                         }
                     </Divider>
                     <Tooltip title={airportsMap[lastFlight.destination]?.name}>
-                        <Typography>{lastFlight.destination}</Typography>
+                        <Typography width='11%' display='flex' justifyContent='center'>{lastFlight.destination}</Typography>
                     </Tooltip>
                 </Box>
                 <Box className={classes.schedules}>
-                    <Typography>{flights[0].startDateTime.format('HH:mm')}</Typography>
+                    <Typography display='flex'>{flights[0].startDateTime.format(dateFormat)}</Typography>
                     <Typography variant='caption' color='grey'>{timeElapsedString(tripDurationSeconds)}</Typography>
-                    <Typography>{lastFlight.landingDateTime.format('HH:mm')}</Typography>
+                    <Typography display='flex'>{lastFlight.landingDateTime.format(dateFormat)}</Typography>
                 </Box>
         </Box>
     </Box>
@@ -166,18 +169,19 @@ const OneWayFlightsCard = React.memo(PureOneWayFlightsCard);
 
 interface ItineraryCardProps {
     itinerary: Itinerary;
+    showFullDates?: boolean;
 }
 
-function PureItineraryCard ({ itinerary }: ItineraryCardProps) {
+function PureItineraryCard ({ itinerary, showFullDates }: ItineraryCardProps) {
     const { classes } = useStyles();
 
     return <Box className={classes.mainBox}>
         <Box className={classes.sumBox}>
-            <OneWayFlightsCard flights={itinerary.outboundFlights}/>
+            <OneWayFlightsCard flights={itinerary.outboundFlights} showFullDates={showFullDates}/>
             {itinerary.returnFlights.length > 0 && 
                 <>
                     <Divider />
-                    <OneWayFlightsCard flights={itinerary.returnFlights}/>
+                    <OneWayFlightsCard flights={itinerary.returnFlights} showFullDates={showFullDates}/>
                 </>
             }
         </Box>
@@ -185,7 +189,7 @@ function PureItineraryCard ({ itinerary }: ItineraryCardProps) {
             <Divider orientation='vertical'/>
         </Box>
         <Box className={classes.priceBox}>
-            <Typography variant='body1' fontSize='1.3em'>{itinerary.price.value.toFixed(2) + ' ' + itinerary.price.currency}</Typography>
+            <Typography variant='body1' fontSize='1.3em' noWrap>{itinerary.price.value.toFixed(2) + ' ' + itinerary.price.currency}</Typography>
         </Box>
     </Box>;
 }

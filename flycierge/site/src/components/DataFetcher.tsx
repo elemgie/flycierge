@@ -7,7 +7,7 @@ export const AirportContext = createContext<Record<string, Airport>>({});
 export const AirlineContext = createContext<Record<string, Airline>>({});
 
 export function DataFetcher({ children }: React.PropsWithChildren) {
-    const client = new Client('http://localhost:8080');
+    const client = useMemo(() => new Client(process.env.REACT_APP_SERVER_URL as string), []);
 
     const [airports, setAirports] = useState<Airport[]>();
     const [airlines, setAirlines] = useState<Airline[]>();
@@ -15,7 +15,7 @@ export function DataFetcher({ children }: React.PropsWithChildren) {
     useEffect(() => {
         client.fetchData<Airport[]>('/airports').then(airports => setAirports(airports));
         client.fetchData<Airline[]>('/airlines').then(airlines => setAirlines(airlines));
-    }, []);
+    }, [client]);
 
     const airportsMap = useMemo(() => {
         if (!airports) {

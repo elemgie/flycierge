@@ -1,30 +1,62 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useContext } from 'react';
 import { tss } from 'tss-react';
 
-import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
-import { DatePicker , LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
-import { Moment } from 'moment';
+import { DatePicker } from '@mui/x-date-pickers';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 
-import { SearchParams } from 'models';
+import moment, { Moment } from 'moment';
+
+import { SimpleSearchParams, DestinationSearchParams, SearchResult, EMPTY_SEARCH_RESPONSE, Itinerary } from 'models';
+import { AirportChooser, AirportContext } from 'components';
+import { Client } from 'client';
 
 const useStyles = tss.create({
     mainGrid: {
         '> div > div': {
             backgroundColor: 'white'
-          },
+        },
         alignItems: 'center',
-    }
+        width: '60vw',
+        marginTop: 8,
+    },
+    datePicker: {
+        width: '21%'
+    },
 })
 
+const client = new Client(process.env.REACT_APP_SERVER_URL as string);
+
+const dateFormat = 'YYYY-MM-DDTHH:mm:ss';
+const parseItineraryDates = (itinerary: Itinerary) => {
+    itinerary.outboundFlights.forEach((fl: any) => {
+      fl.startDateTime = moment(fl.startDateTime, dateFormat);
+      fl.landingDateTime = moment(fl.landingDateTime, dateFormat);
+    });
+    if (itinerary.returnFlights) {
+        itinerary.returnFlights.forEach((fl: any) => {
+        fl.startDateTime = moment(fl.startDateTime, dateFormat);
+        fl.landingDateTime = moment(fl.landingDateTime, dateFormat);
+      });
+    }
+    return itinerary;
+  };
+
+
 interface SearchPanelProps {
-    onSearch: (params: SearchParams) => void;
+    setIsFetching: (value: boolean) => void;
+    isFetching: boolean;
+    setSearchResult: (results: SearchResult) => void;
 }
 
-function PureSearchPanel({ onSearch } : SearchPanelProps) {
+function PureFlightSearchPanel({ isFetching, setIsFetching, setSearchResult } : SearchPanelProps) {
     const { classes } = useStyles();
+
+    const airportsMap = useContext(AirportContext);
 
     const [origin, setOrigin] = useState<string>('');
     const [destination, setDestination] = useState<string>('');
@@ -33,61 +65,255 @@ function PureSearchPanel({ onSearch } : SearchPanelProps) {
     const [datePickerError, setDatePickerError] = useState<string | null>(null);
     const [adultNumber, setAdultNumber] = useState<number>(1);
 
-    const handleOriginChange = useCallback((evt: React.ChangeEvent<HTMLInputElement>) => 
-        setOrigin(evt.target.value), []);
 
-    const handleDestinationChange = useCallback((evt: React.ChangeEvent<HTMLInputElement>) => 
-        setDestination(evt.target.value), []);
+    const handleOriginChange = useCallback((input: string) =>
+        setOrigin(input), []);
 
-    const handleDepartureDateChange = useCallback((date: Moment | null) =>
-        setDepartureDate(date), []);
+    const handleDestinationChange = useCallback((input: string) =>
+        setDestination(input), []);
 
-    const handleReturnDateChange = useCallback((date: Moment | null) =>
-        setReturnDate(date), []);
+    const handleDepartureDateChange = useCallback((date: Moment | null) => setDepartureDate(date), []);
+
+    const handleReturnDateChange = useCallback((date: Moment | null) => setReturnDate(date), []);
+
+    const validateOrigin = useMemo(() => !!airportsMap[origin], [airportsMap, origin]);
+
+    const validateDestination = useMemo(() => !!airportsMap[destination] && destination !== origin,
+    [airportsMap, destination]);
+
+    const handleSearch = useCallback(async (params: SimpleSearchParams) => {
+        setIsFetching(true);
+        let response: SearchResult;
+        try {
+            response = await client.fetchData<SearchResult>('/search', 'POST', params);
+            response.itineraries = response.itineraries.map(parseItineraryDates);
+        } catch (error) {
+            response = EMPTY_SEARCH_RESPONSE;
+        }
+        setSearchResult(response);
+        setIsFetching(false);
+      }, [setSearchResult, setIsFetching]);
 
     const handleSearchClick = useCallback(() => {
         if (departureDate) {
-            onSearch({origin, destination, departureDate: departureDate.format('YYYY-MM-DD'),
+            handleSearch({origin, destination, departureDate: departureDate.format('YYYY-MM-DD'),
                 returnDate: returnDate?.format('YYYY-MM-DD') || null, adultNumber});
             }
-    }, [origin, destination, departureDate, returnDate, adultNumber]);
+    }, [origin, destination, departureDate, returnDate, adultNumber, handleSearch]);
 
-    const [open, setOpen] = useState(false);
+    const [openDepartureDatePicker, setOpenDepartureDatePicker] = useState(false);
+    const [openReturnDatePicker, setOpenReturnDatePicker] = useState(false);
 
     const isSearchValid = useMemo(() => {
-        return origin && destination && departureDate && !datePickerError;
-    }, [origin, destination, departureDate, datePickerError]);
+        return validateOrigin && validateDestination && departureDate && !datePickerError;
+    }, [validateOrigin, validateDestination, departureDate, datePickerError]);
 
     return (
-        <Grid container wrap="nowrap" direction="row" spacing={1} className={classes.mainGrid}>
-            <Grid item>
-                <TextField label="From" value={origin} onChange={handleOriginChange}/>
-            </Grid>
-            <Grid item>
-                <TextField label="To" value={destination} onChange={handleDestinationChange}/>
-            </Grid>
-            <Grid item>
-                <LocalizationProvider dateAdapter={AdapterMoment}>
-                    <DatePicker label="Departure date" onChange={handleDepartureDateChange} onError={setDatePickerError} disablePast format='DD-MM-YYYY'/>
-                </LocalizationProvider>
-            </Grid>
-            <Grid item>
-                <LocalizationProvider dateAdapter={AdapterMoment}>
-                    <DatePicker label="Return date" open={open} onClose={() => setOpen(false)} onChange={handleReturnDateChange} disablePast
-                    slotProps={{textField: {
-                        onClick: () => setOpen(true)
-                    }}}
+            <Grid container wrap="nowrap" direction="row" spacing={1} className={classes.mainGrid}>
+                <Grid item width="24%">
+                    <AirportChooser label="From" value={origin} onChange={handleOriginChange}/>
+                </Grid>
+                <Grid item width="24%">
+                    <AirportChooser label="To" value={destination} onChange={handleDestinationChange}/>
+                </Grid>
+                <Grid item className={classes.datePicker}>
+                    <DatePicker label="Departure date"
+                        open={openDepartureDatePicker}
+                        onClose={() => setOpenDepartureDatePicker(false)}
+                        onChange={handleDepartureDateChange}
+                        onError={setDatePickerError}
+                        maxDate={returnDate ? returnDate : undefined}
+                        disablePast
+                        format='DD-MM-YYYY'
+                        slotProps={{
+                            openPickerIcon: {
+                                onClick: () => setOpenDepartureDatePicker(true)
+                            },
+                            textField: {
+                                onClick: () => setOpenDepartureDatePicker(true)
+                            },
+                            field: {
+                                clearable: true
+                            }
+                        }}
                     />
-                </LocalizationProvider>
+                </Grid>
+                <Grid item className={classes.datePicker}>
+                    <DatePicker label="Return date"
+                        open={openReturnDatePicker}
+                        onClose={() => setOpenReturnDatePicker(false)}
+                        onChange={handleReturnDateChange}
+                        onError={setDatePickerError}
+                        minDate={departureDate ? departureDate : undefined}
+                        disablePast
+                        format='DD-MM-YYYY'
+                        slotProps={{
+                            openPickerIcon: {
+                                onClick: () => setOpenReturnDatePicker(true)
+                            },
+                            textField: {
+                                onClick: () => setOpenReturnDatePicker(true)
+                            },
+                            field: {
+                                clearable: true
+                            }
+                        }}
+                    />
+                </Grid>
+                <Grid item>
+                    <Button
+                        variant="contained"
+                        disabled={!isSearchValid || isFetching}
+                        onClick={handleSearchClick}>
+                            SEARCH
+                    </Button>
+                </Grid>
             </Grid>
-            <Grid item>
-                <Button
-                    variant="contained"
-                    disabled={!isSearchValid}
-                    onClick={handleSearchClick}>
-                        SEARCH
-                </Button>
+    );
+}
+
+const FlightSearchPanel = React.memo(PureFlightSearchPanel);
+
+function PureDestinationSearchPanel({ isFetching, setIsFetching, setSearchResult } : SearchPanelProps) {
+    const { classes } = useStyles();
+
+    const airportsMap = useContext(AirportContext);
+
+    const [origin, setOrigin] = useState<string>('');
+    const [departureDateRangeStart, setDepartureDateRangeStart] = useState<Moment | null>(null);
+    const [departureDateRangeEnd, setDepartureDateRangeEnd] = useState<Moment | null>(null);
+    const [isReturn, setIsReturn] = useState<boolean>(false);
+    const [isReturnSelectString, setIsReturnSelectString] = useState<string>('one-way');
+    const [adultNumber, setAdultNumber] = useState<number>(1);
+    const [datePickerError, setDatePickerError] = useState<string | null>(null);
+
+    const handleIsReturnNumberChange = useCallback((event: SelectChangeEvent) => {
+        setIsReturnSelectString(event.target.value);
+        setIsReturn(event.target.value === 'return');
+    }, []);
+
+    const handleOriginChange = useCallback((input: string) =>
+        setOrigin(input), []);
+
+    const handleDepartureDateRangeStartChange = useCallback((date: Moment | null) =>
+        setDepartureDateRangeStart(date), []);
+
+    const handleDepartureDateRangeEndChange = useCallback((date: Moment | null) =>
+        setDepartureDateRangeEnd(date), []);
+
+    const validateOrigin = useMemo(() => !!airportsMap[origin], [airportsMap, origin]);
+
+    const handleSearch = useCallback(async (params: DestinationSearchParams) => {
+        setIsFetching(true);
+        let response: SearchResult;
+        try {
+            response = await client.fetchData<SearchResult>('/search-destination', 'POST', params);
+            response.itineraries = response.itineraries.map(parseItineraryDates);
+        } catch (error) {
+            response = EMPTY_SEARCH_RESPONSE;
+        }
+        setSearchResult(response);
+        setIsFetching(false);
+      }, [setSearchResult, setIsFetching]);
+
+    const handleSearchClick = useCallback(() => {
+        if (departureDateRangeStart && departureDateRangeEnd) {
+            handleSearch({origin, departureRangeEnd: departureDateRangeEnd.format('YYYY-MM-DD'),
+                departureRangeStart: departureDateRangeStart.format('YYYY-MM-DD'), adultNumber, isReturn});
+            }
+    }, [origin, departureDateRangeStart, departureDateRangeEnd, isReturn, adultNumber, handleSearch]);
+
+    const [openDepartureDatePicker, setOpenDepartureDatePicker] = useState(false);
+    const [openReturnDatePicker, setOpenReturnDatePicker] = useState(false);
+
+    const isSearchValid = useMemo(() => {
+        return validateOrigin && departureDateRangeStart && departureDateRangeEnd && !datePickerError;
+    }, [validateOrigin, departureDateRangeStart, departureDateRangeEnd, datePickerError]);
+
+    return (
+            <Grid container wrap="nowrap" direction="row" spacing={1} className={classes.mainGrid}>
+                <Grid item width="24%">
+                    <Select value={isReturnSelectString} onChange={handleIsReturnNumberChange} fullWidth>
+                        <MenuItem value={'one-way'}>One way</MenuItem>
+                        <MenuItem value={'return'}>Return</MenuItem>
+                    </Select>
+                </Grid>
+                <Grid item width="24%">
+                    <AirportChooser label="From" value={origin} onChange={handleOriginChange}/>
+                </Grid>
+                <Grid item className={classes.datePicker}>
+                    <DatePicker label="Departure range start"
+                        open={openDepartureDatePicker}
+                        onClose={() => setOpenDepartureDatePicker(false)}
+                        onChange={handleDepartureDateRangeStartChange}
+                        onError={setDatePickerError}
+                        maxDate={departureDateRangeEnd ? departureDateRangeEnd : undefined}
+                        disablePast
+                        format='DD-MM-YYYY'
+                        slotProps={{
+                            openPickerIcon: {
+                                onClick: () => setOpenDepartureDatePicker(true)
+                            },
+                            textField: {
+                                onClick: () => setOpenDepartureDatePicker(true)
+                            },
+                            field: {
+                                clearable: true
+                            }
+                        }}
+                    />
+                </Grid>
+                <Grid item className={classes.datePicker}>
+                    <DatePicker label="Departure range end"
+                        open={openReturnDatePicker}
+                        onClose={() => setOpenReturnDatePicker(false)}
+                        onChange={handleDepartureDateRangeEndChange}
+                        onError={setDatePickerError}
+                        minDate={departureDateRangeStart ? departureDateRangeStart : undefined}
+                        disablePast
+                        format='DD-MM-YYYY'
+                        slotProps={{
+                            openPickerIcon: {
+                                onClick: () => setOpenReturnDatePicker(true)
+                            },
+                            textField: {
+                                onClick: () => setOpenReturnDatePicker(true)
+                            },
+                            field: {
+                                clearable: true
+                            }
+                        }}
+                    />
+                </Grid>
+                <Grid item>
+                    <Button
+                        variant="contained"
+                        disabled={!isSearchValid || isFetching}
+                        onClick={handleSearchClick}>
+                            SEARCH
+                    </Button>
+                </Grid>
             </Grid>
+    );
+}
+
+const DestinationSearchPanel = React.memo(PureDestinationSearchPanel);
+
+function PureSearchPanel(props : SearchPanelProps) {
+    const [tabValue, setTabValue] = useState<number>(0);
+
+    const handleTabChange = useCallback((_evt: React.SyntheticEvent, newValue: number) => {
+        setTabValue(newValue);
+      }, [])
+
+    return (
+        <Grid container wrap="nowrap" direction="column">
+            <Tabs value={tabValue} onChange={handleTabChange}>
+                <Tab value={0} label="Flight Search" />
+                <Tab value={1} label="Destination Search" />
+            </Tabs>
+            {tabValue === 0 && <FlightSearchPanel {...props} />}
+            {tabValue === 1 && <DestinationSearchPanel {...props} />}
         </Grid>
     );
 }

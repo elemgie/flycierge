@@ -5,6 +5,8 @@ import Flycierge from './Flycierge';
 import { DataFetcher } from 'components'
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 
 const baseTheme = createTheme({});
 
@@ -14,9 +16,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <DataFetcher>
-      <ThemeProvider theme={baseTheme}>
-        <Flycierge />
-      </ThemeProvider>
+      <LocalizationProvider dateAdapter={AdapterMoment}>
+        <ThemeProvider theme={baseTheme}>
+          <Flycierge />
+        </ThemeProvider>
+      </LocalizationProvider>
     </DataFetcher>
   </React.StrictMode>
 );
