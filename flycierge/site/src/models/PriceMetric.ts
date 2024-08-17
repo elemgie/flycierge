@@ -4,4 +4,5 @@ export type PriceMetric = {
     secondQuartile: number;
     thirdQuartile: number;
     maximalValue: number;
+    currency: string;
 };

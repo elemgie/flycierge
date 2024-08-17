@@ -14,13 +14,14 @@ import { ItineraryCard } from 'components';
 const useStyles = tss.create({
     mainPanel: {
         borderColor: 'grey',
-        borderRadius: 3,
+        borderRadius: 5,
         borderWidth: 2,
         borderStyle: 'solid',
         alignSelf: 'center',
         justifySelf: 'center',
         width: '40vw',
-        margin: 8
+        margin: 8,
+        backgroundColor: '#F1F1F1',
     },
     infoBox: {
         display: 'flex',

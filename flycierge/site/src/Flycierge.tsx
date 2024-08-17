@@ -1,11 +1,11 @@
-import  { useCallback, useState, useEffect } from 'react';
+import  { useState } from 'react';
 import { tss } from 'tss-react';
+
 import Grid from '@mui/material/Grid';
+import Stack from '@mui/material/Stack';
 
-import { SearchPanel, TopBar, ItineraryPanel } from 'components';
+import { SearchPanel, TopBar, ItineraryPanel, PriceMetricPanel, FilterPanel } from 'components';
 import { SearchResult } from 'models';
-
-import Typography from '@mui/material/Typography';
 
 import moment from 'moment';
 import 'moment/locale/en-gb';
@@ -27,9 +27,20 @@ const useStyles = tss.create({
     display: 'flex',
     margin: '8px'
   },
-  mainPanel: {
+  contentBox: {
+    width: '100vw'
+  },
+  filterPanel: {
+    width: '28vw',
+    justifySelf: 'start',
     display: 'flex',
-    flexDirection: 'row'
+    justifyContent: 'end'
+  },
+  priceMetricPanel: {
+    width: '28vw',
+    justifySelf: 'end',
+    display: 'flex',
+    justifyContent: 'start'
   }
 });
 
@@ -48,9 +59,15 @@ function Flycierge() {
       <div className={classes.searchPanel}>
         <SearchPanel setIsFetching={setIsFetching} setSearchResult={setSearchResult} isFetching={isFetching}/>
       </div>
-      <div className={classes.mainPanel}>
+      <Stack className={classes.contentBox} direction='row'>
+        <div className={classes.filterPanel}>
+          <FilterPanel />
+        </div>
         <ItineraryPanel itineraries={searchResult?.itineraries || null} isFetching={isFetching} showFullDates/>
-      </div>
+        <div className={classes.priceMetricPanel}>
+          <PriceMetricPanel searchResult={searchResult} />
+        </div>
+      </Stack>
     </Grid>
   );
 }

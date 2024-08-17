@@ -50,7 +50,7 @@ const parseItineraryDates = (itinerary: Itinerary) => {
 interface SearchPanelProps {
     setIsFetching: (value: boolean) => void;
     isFetching: boolean;
-    setSearchResult: (results: SearchResult) => void;
+    setSearchResult: (results: SearchResult | null) => void;
 }
 
 function PureFlightSearchPanel({ isFetching, setIsFetching, setSearchResult } : SearchPanelProps) {
@@ -82,6 +82,7 @@ function PureFlightSearchPanel({ isFetching, setIsFetching, setSearchResult } : 
     [airportsMap, destination]);
 
     const handleSearch = useCallback(async (params: SimpleSearchParams) => {
+        setSearchResult(null);
         setIsFetching(true);
         let response: SearchResult;
         try {
@@ -204,6 +205,7 @@ function PureDestinationSearchPanel({ isFetching, setIsFetching, setSearchResult
     const validateOrigin = useMemo(() => !!airportsMap[origin], [airportsMap, origin]);
 
     const handleSearch = useCallback(async (params: DestinationSearchParams) => {
+        setSearchResult(null);
         setIsFetching(true);
         let response: SearchResult;
         try {
