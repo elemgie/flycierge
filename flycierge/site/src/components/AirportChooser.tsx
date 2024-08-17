@@ -49,7 +49,7 @@ function PureAirportChooser({ label, value, onChange }: AirportChooserProps) {
         const sanitizedInput = input.trim().toLowerCase();
         const inputLength = sanitizedInput.length;
 
-        const compare = (val: string) => val.toLowerCase().includes(sanitizedInput);
+        const compare = (val: string) => val.toLowerCase().startsWith(sanitizedInput);
 
         // if input is too short don't return probably huge list triggering expensive render of suggestion list
         // it might freeze the component for a noticeable time
