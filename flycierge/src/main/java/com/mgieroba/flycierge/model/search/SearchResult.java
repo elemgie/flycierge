@@ -17,5 +17,5 @@ import java.util.List;
 @Getter
 public class SearchResult {
     private List<RichItinerary> itineraries;
-    @Nullable private RoutePriceMetric priceMetrics;
+    @Nullable private RoutePriceMetric priceMetric;
 }
