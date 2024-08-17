@@ -28,15 +28,19 @@ public class ItineraryRepository {
             ), outbound_flights AS (
                 INSERT INTO itinerary_flight (itinerary_id, flight_id, is_return_flight)
                 SELECT itinerary_id, UNNEST(ARRAY[:outbound_flights]::BIGINT[]), false FROM upserted_itinerary
+                ON CONFLICT DO NOTHING
                 RETURNING itinerary_id
             ), return_flights AS (
                 INSERT INTO itinerary_flight (itinerary_id, flight_id, is_return_flight)
                 SELECT itinerary_id, UNNEST(ARRAY[:return_flights]::BIGINT[]), true FROM upserted_itinerary
+                ON CONFLICT DO NOTHING
                 RETURNING itinerary_id
             )
             SELECT itinerary_id FROM outbound_flights
             UNION
             SELECT itinerary_id FROM return_flights
+            UNION
+            SELECT itinerary_id FROM upserted_itinerary
             LIMIT 1
             """;
         long itineraryId = db.sql(sql)

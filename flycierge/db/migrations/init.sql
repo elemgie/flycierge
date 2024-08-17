@@ -54,7 +54,8 @@ CREATE TABLE itinerary_flight (
     itinerary_flight_id BIGINT PRIMARY KEY DEFAULT nextval('the_sequence'),
     itinerary_id BIGINT NOT NULL REFERENCES itinerary(itinerary_id),
     flight_id BIGINT NOT NULL REFERENCES flight(flight_id),
-    is_return_flight BOOLEAN NOT NULL
+    is_return_flight BOOLEAN NOT NULL,
+    UNIQUE(itinerary_id, flight_id)
 );
 
 CREATE TABLE price (
