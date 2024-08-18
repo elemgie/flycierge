@@ -7,10 +7,12 @@ import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
+import Card from '@mui/material/Card';
 
 import { Itinerary, Flight } from 'models';
 import { timeElapsedString } from 'utils';
 import { AirportContext, AirlineContext } from 'components';
+import { CardActionArea } from '@mui/material';
 
 const useStyles = tss.create({
     mainBox: {
@@ -70,7 +72,8 @@ const useStyles = tss.create({
     },
     verticalDivider: {
         borderRightWidth: 2,
-        color: 'grey'
+        color: 'grey',
+        height: '100%'
     },
     directChip: {
         backgroundColor: "#5CD2E6"
@@ -133,7 +136,7 @@ function PureOneWayFlightsCard({ flights, showFullDates }: OneWayFlightsCardProp
 
     const lastFlight = useMemo(() => flights[flights.length - 1], [flights]);
 
-    const dateFormat = useMemo(() => showFullDates ? "DD.MM HH:mm" : "HH:mm", [showFullDates]);
+    const dateFormat = useMemo(() => showFullDates ? "DD/MM HH:mm" : "HH:mm", [showFullDates]);
 
     return <Box display='flex' flexDirection='row'>
             <Box className={classes.airlineBox}>
@@ -142,7 +145,7 @@ function PureOneWayFlightsCard({ flights, showFullDates }: OneWayFlightsCardProp
             <Box className={classes.flightsBox}>
                 <Box className={classes.locations}>
                     <Tooltip title={airportsMap[flights[0].origin]?.name}>
-                        <Typography width='11%'  display='flex'>{flights[0].origin}</Typography>
+                        <Typography width='11%' display='flex'>{flights[0].origin}</Typography>
                     </Tooltip>
                     <Divider flexItem className={classes.locationsDivider}>
                         {isDirectFlight(flights) ?
@@ -170,28 +173,31 @@ const OneWayFlightsCard = React.memo(PureOneWayFlightsCard);
 interface ItineraryCardProps {
     itinerary: Itinerary;
     showFullDates?: boolean;
+    onClick?: () => void;
 }
 
-function PureItineraryCard ({ itinerary, showFullDates }: ItineraryCardProps) {
+function PureItineraryCard ({ itinerary, showFullDates, onClick }: ItineraryCardProps) {
     const { classes } = useStyles();
 
-    return <Box className={classes.mainBox}>
-        <Box className={classes.sumBox}>
-            <OneWayFlightsCard flights={itinerary.outboundFlights} showFullDates={showFullDates}/>
-            {itinerary.returnFlights.length > 0 && 
-                <>
-                    <Divider />
-                    <OneWayFlightsCard flights={itinerary.returnFlights} showFullDates={showFullDates}/>
-                </>
-            }
-        </Box>
-        <Box className={classes.verticalDivider}>
-            <Divider orientation='vertical'/>
-        </Box>
-        <Box className={classes.priceBox}>
-            <Typography variant='body1' fontSize='1.3em' noWrap>{itinerary.price.value.toFixed(2) + ' ' + itinerary.price.currency}</Typography>
-        </Box>
-    </Box>;
+    return <Card className={classes.mainBox}>
+            <CardActionArea onClick={onClick} className={classes.mainBox}>
+                <Box className={classes.sumBox}>
+                    <OneWayFlightsCard flights={itinerary.outboundFlights} showFullDates={showFullDates}/>
+                    {itinerary.returnFlights.length > 0 &&
+                        <>
+                            <Divider />
+                            <OneWayFlightsCard flights={itinerary.returnFlights} showFullDates={showFullDates}/>
+                        </>
+                    }
+                </Box>
+                <Box className={classes.verticalDivider}>
+                    <Divider orientation='vertical'/>
+                </Box>
+                <Box className={classes.priceBox}>
+                    <Typography variant='body1' fontSize='1.3em' noWrap>{itinerary.price.value.toFixed(2) + ' ' + itinerary.price.currency}</Typography>
+                </Box>
+            </CardActionArea>
+        </Card>;
 }
 
 export const ItineraryCard = React.memo(PureItineraryCard);

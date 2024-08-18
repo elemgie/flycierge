@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { tss } from 'tss-react';
 
 import Box from '@mui/material/Box';
@@ -10,6 +10,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { Itinerary } from 'models';
 import { ItineraryCard } from 'components';
+import { ItineraryDialog } from './ItineraryDialog';
 
 const useStyles = tss.create({
     mainPanel: {
@@ -26,7 +27,6 @@ const useStyles = tss.create({
     infoBox: {
         display: 'flex',
         backgroundColor: 'white',
-        width: '50vw',
         justifyContent: 'center',
         padding: 8
     },
@@ -46,6 +46,11 @@ function PureItineraryPanel ( { itineraries, isFetching, showFullDates } : Itine
     const { classes, cx } = useStyles();
     const itineraryComparator = useCallback((a: Itinerary, b: Itinerary) => a.price.value - b.price.value, []);
 
+    const [dialogItinerary, setDialogItinerary] = useState<Itinerary | null>(null);
+
+    const handleItineraryClick = useCallback((itinerary: Itinerary) => setDialogItinerary(itinerary), []);
+    const handleItineraryDialogClose = useCallback(() => setDialogItinerary(null), []);
+
     if (isFetching) {
         return <Box className={cx(classes.mainPanel, classes.infoBox)}>
             <Stack direction='row' justifyContent='center' alignItems='center' spacing={2}>
@@ -61,7 +66,7 @@ function PureItineraryPanel ( { itineraries, isFetching, showFullDates } : Itine
 
     if (itineraries.length === 0) {
         return <Box className={cx(classes.mainPanel, classes.infoBox)}>
-                <Typography fontSize='2.5rem'>
+                <Typography fontSize='2rem'>
                     No flights matching provided criteria were found
                 </Typography>
         </Box>
@@ -70,10 +75,15 @@ function PureItineraryPanel ( { itineraries, isFetching, showFullDates } : Itine
     return <Box className={classes.mainPanel}>
         <List className={classes.itineraryList}>
             {itineraries.sort(itineraryComparator).map(it => <ListItem id={it.itineraryId + ''}>
-                <ItineraryCard itinerary={it} showFullDates={showFullDates}/>
+                <ItineraryCard
+                    itinerary={it}
+                    showFullDates={showFullDates}
+                    onClick={() => handleItineraryClick(it)}
+                />
             </ListItem>
             )}
         </List>
+        {dialogItinerary && <ItineraryDialog itinerary={dialogItinerary} onClose={handleItineraryDialogClose} /> }
     </Box>
 }
 
