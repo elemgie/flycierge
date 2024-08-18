@@ -15,6 +15,7 @@ import com.mgieroba.flycierge.repository.RoutePriceMetricRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -80,24 +81,29 @@ public class QueryResolver {
 
     private List<RichItinerary> saveItineraries(List<RichItinerary> itineraries) {
         return itineraries.stream().map(itinerary -> {
-            List<Flight> outboundFlights = itinerary.getOutboundFlights().stream().map(flightRepository::create).toList();
-            List<Flight> returnFlights = itinerary.getReturnFlights().stream().map(flightRepository::create).toList();
-            Itinerary savedItinerary = itineraryRepository.create(
-                Itinerary.builder()
-                    .outboundFlights(outboundFlights)
-                    .returnFlights(returnFlights)
-                    .flightsHash(calculateItineraryFlightsHash(outboundFlights, returnFlights))
-                    .build());
+            Itinerary savedItinerary = saveItinerary(itinerary);
             Price price = itinerary.getPrice();
             price.setItineraryId(savedItinerary.getItineraryId());
             price = priceRepository.create(price);
             return (RichItinerary) RichItinerary.builder()
                 .itineraryId(savedItinerary.getItineraryId())
-                .outboundFlights(outboundFlights)
-                .returnFlights(returnFlights)
+                .outboundFlights(savedItinerary.getOutboundFlights())
+                .returnFlights(savedItinerary.getReturnFlights())
                 .price(price)
                 .build();
         }).toList();
+    }
+
+    @Transactional
+    private Itinerary saveItinerary(Itinerary itinerary) {
+        List<Flight> outboundFlights = itinerary.getOutboundFlights().stream().map(flightRepository::create).toList();
+        List<Flight> returnFlights = itinerary.getReturnFlights().stream().map(flightRepository::create).toList();
+        return itineraryRepository.create(
+            Itinerary.builder()
+                .outboundFlights(outboundFlights)
+                .returnFlights(returnFlights)
+                .flightsHash(calculateItineraryFlightsHash(outboundFlights, returnFlights))
+                .build());
     }
 
     private String calculateItineraryFlightsHash(List<Flight> outboundFlights, List<Flight> returnFlights) {
