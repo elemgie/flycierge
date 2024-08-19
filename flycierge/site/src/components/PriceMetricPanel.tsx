@@ -49,8 +49,14 @@ function PurePriceMetricPanel({ searchResult }: PriceMetricPanelProps) {
         return { color: 'grey', text: 'Price is within the usual range' };
     }, [lowestFoundPrice, metric]);
 
-    if (!metric || !searchResult?.itineraries || searchResult?.itineraries.length === 0) {
+    if (!searchResult?.itineraries || searchResult?.itineraries.length === 0) {
         return <></>;
+    }
+
+    if (!metric) {
+        return <Box className={classes.mainPanel}>
+            <Typography>We don't have enough data to provide you with an accurate price metric</Typography>
+        </Box>
     }
 
     return <Box className={classes.mainPanel}>
