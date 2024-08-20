@@ -22,7 +22,7 @@ public class AirportAirlineFetcherWorker {
 
     private CiriumService ciriumClient;
 
-    @Scheduled(fixedDelayString="P30D")
+    @Scheduled(fixedDelayString="P30D", initialDelayString="PT30M")
     public void refreshAirports() {
         log.info("Beginning refreshing airports");
         List<Airport> fetchedAirports = ciriumClient.fetchAirports();
@@ -30,7 +30,7 @@ public class AirportAirlineFetcherWorker {
         log.info("Successfully refreshed airports");
     }
 
-    @Scheduled(fixedDelayString="P30D")
+    @Scheduled(fixedDelayString="P30D", initialDelayString="PT31M")
     public void refreshAirlines() {
         log.info("Beginning refreshing airlines");
         List<Airline> fetchedAirlines = ciriumClient.fetchAirlines();
