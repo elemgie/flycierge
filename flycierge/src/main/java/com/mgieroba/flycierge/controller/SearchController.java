@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @AllArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin
 public class SearchController {
 
     private final SearchRepository searchRepository;
