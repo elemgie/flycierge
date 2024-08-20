@@ -30,6 +30,8 @@ services:
     container_name: db
     volumes:
       - ./db/docker_dumps:/docker-entrypoint-initdb.d
+      - ./postgres-data:/var/lib/postgresql/data
+
     environment:
       - POSTGRES_USER=flycierge_user
       - POSTGRES_PASSWORD=flycierge_pass
