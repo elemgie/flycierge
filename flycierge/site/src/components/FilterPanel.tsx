@@ -1,7 +1,5 @@
-import React, { useState, useCallback, useMemo, useEffect, ChangeEvent } from 'react';
+import React, { useCallback, ChangeEvent } from 'react';
 import { tss } from 'tss-react';
-
-import { Itinerary } from 'models';
 
 import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
@@ -31,8 +29,6 @@ const useStyles = tss.create({
 })
 
 interface FilterPanelProps {
-    // setFilter: (filterFunc: (itinerary: Itinerary) => boolean) => void;
-    // setSorter: (sorterFunc: (a: Itinerary, b: Itinerary) => number) => void;
     setMaxPrice: (val: number) => void;
     setMaxFlightNumberString: (val: string) => void;
     setSorterChoice: (val: string) => void;
@@ -45,12 +41,12 @@ function PureFilterPanel({ maxPrice, maxFlightNumberString, sorterChoice, setMax
     const { classes } = useStyles();
 
     const handleMaxFlightNumberChange = useCallback((_event: ChangeEvent<HTMLInputElement>, val: string) =>
-        setMaxFlightNumberString(val), []);
+        setMaxFlightNumberString(val), [setMaxFlightNumberString]);
 
     const handleMaxPriceChange = useCallback((_event: any, val: number | number[]) =>
-        setMaxPrice(val as number), []);
+        setMaxPrice(val as number), [setMaxPrice]);
 
-    const handleSortertChoiceChange = useCallback((_event: ChangeEvent<HTMLInputElement>, val: string) => setSorterChoice(val), []);
+    const handleSortertChoiceChange = useCallback((_event: ChangeEvent<HTMLInputElement>, val: string) => setSorterChoice(val), [setSorterChoice]);
 
     return <Box className={classes.mainPanel}>
         <Typography fontWeight='bold' marginBottom={1}>Filters</Typography>
