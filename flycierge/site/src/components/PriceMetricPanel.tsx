@@ -44,7 +44,7 @@ function PurePriceMetricPanel({ searchResult }: PriceMetricPanelProps) {
             return { color: 'green', text: 'This is a great deal!' };
         }
         if (lowestFoundPrice > metric.thirdQuartile) {
-            return { color: 'red', text: 'This is rather much for that route' };
+            return { color: 'red', text: 'This is rather much' };
         }
         return { color: 'grey', text: 'Price is within the usual range' };
     }, [lowestFoundPrice, metric]);
