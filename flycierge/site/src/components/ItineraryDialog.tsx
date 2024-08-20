@@ -121,7 +121,21 @@ function PureOneWayFlightsCard({ flights }: OneWayFlightsCardProps) {
                 {durationString}
             </Typography>
         </Box> 
-        {flights.map(fl => <FlightCard flight={fl} />)}
+        {flights.map((fl, idx) => {
+            if (idx === flights.length - 1) {
+                return <FlightCard flight={fl} />
+            } else {
+                const layoverDurationString = timeElapsedString(
+                    flights[idx + 1].startDateTime.diff(fl.landingDateTime, 's'));
+
+                return <>
+                    <FlightCard flight={fl} />
+                    <Typography variant='body2' color='grey' textAlign='center'>
+                        {`Layover for ${layoverDurationString}`}
+                    </Typography>
+                </>;
+            }
+        })}
     </Box>;
 }
 
