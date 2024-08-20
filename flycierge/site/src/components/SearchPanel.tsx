@@ -79,7 +79,7 @@ function PureFlightSearchPanel({ isFetching, setIsFetching, setSearchResult } : 
     const validateOrigin = useMemo(() => !!airportsMap[origin], [airportsMap, origin]);
 
     const validateDestination = useMemo(() => !!airportsMap[destination] && destination !== origin,
-    [airportsMap, destination]);
+    [airportsMap, destination, origin]);
 
     const handleSearch = useCallback(async (params: SimpleSearchParams) => {
         setSearchResult(null);
