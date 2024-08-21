@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 @AllArgsConstructor
 public class ItineraryRepository {
     private JdbcClient db;
-    // TODO: wielokrotnie zapisywało się to samo itinerary! Napisać test na to !!!!!
+
     public Itinerary create(Itinerary itinerary) {
         String sql = """
             WITH maybe_old_itinerary AS (

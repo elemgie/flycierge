@@ -1,16 +1,60 @@
 package com.mgieroba.flycierge;
 
+import com.mgieroba.flycierge.controller.SearchController;
+import com.mgieroba.flycierge.model.Flight;
+import com.mgieroba.flycierge.model.Price;
 import com.mgieroba.flycierge.model.RichItinerary;
+import com.mgieroba.flycierge.model.search.Search;
+import com.mgieroba.flycierge.service.amadeus.AmadeusService;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public abstract class BasicIntegrationTest {
     @Autowired protected JdbcClient db;
+    @MockBean protected AmadeusService amadeusService;
+    @Autowired protected SearchController api;
+
+    protected final List<RichItinerary> exampleReturnedData = List.of(
+        RichItinerary.builder()
+            .outboundFlights(List.of(
+                Flight.builder()
+                    .number("1234")
+                    .airline("AB")
+                    .startDateTime(LocalDateTime.parse("2024-09-10T16:00:00"))
+                    .landingDateTime(LocalDateTime.parse("2024-09-10T17:05:00"))
+                    .origin("WRO")
+                    .destination("WAW")
+                    .build(),
+                Flight.builder()
+                    .number("5678")
+                    .airline("AB")
+                    .startDateTime(LocalDateTime.parse("2024-09-10T17:55:00"))
+                    .landingDateTime(LocalDateTime.parse("2024-09-10T20:15:00"))
+                    .origin("WAW")
+                    .destination("BGY")
+                    .build())
+            )
+            .returnFlights(List.of())
+            .price(Price.builder()
+                .currency("PLN")
+                .value(359.95)
+                .build())
+            .build());
+
+    protected final Search exampleSearch = Search.builder()
+        .adultNumber(1)
+        .origin("WRO")
+        .destination("BGY")
+        .departureDate(LocalDate.parse("2024-09-10"))
+        .build();
 
     @BeforeEach
     public void clearDatabase() {
