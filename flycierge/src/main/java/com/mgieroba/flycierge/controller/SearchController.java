@@ -10,6 +10,7 @@ import com.mgieroba.flycierge.model.search.SearchResult;
 import com.mgieroba.flycierge.repository.AirlineRepository;
 import com.mgieroba.flycierge.repository.AirportRepository;
 import com.mgieroba.flycierge.repository.SearchRepository;
+import com.mgieroba.flycierge.service.FlightSearchResponseCache;
 import com.mgieroba.flycierge.service.QueryResolver;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -31,6 +33,7 @@ public class SearchController {
     private final QueryResolver queryResolver;
     private final AirportRepository airportRepository;
     private final AirlineRepository airlineRepository;
+    private final FlightSearchResponseCache responseCache;
 
     @PostMapping("/search")
     public SearchResult search(@RequestBody Search searchRequest) {
@@ -38,10 +41,17 @@ public class SearchController {
         Search search = searchRepository.create(searchRequest);
         airportRepository.bumpSearchCount(searchRequest.getOrigin());
 
+        Optional<SearchResult> maybeCachedResult = responseCache.getFor(search);
+        if (maybeCachedResult.isPresent()) {
+            return maybeCachedResult.get();
+        }
+
         CompletableFuture<List<RichItinerary>> itinerariesFuture = queryResolver.findItineraries(search);
         CompletableFuture<RoutePriceMetric> priceMetricsFuture = queryResolver.calculateRoutePriceMetricsForSearch(search);
 
-        return new SearchResult(itinerariesFuture.join(), priceMetricsFuture.join());
+        SearchResult result = new SearchResult(itinerariesFuture.join(), priceMetricsFuture.join());
+        responseCache.put(search, result);
+        return result;
     }
 
     @PostMapping("/search-destination")

@@ -7,13 +7,17 @@ import com.mgieroba.flycierge.model.RichItinerary;
 import com.mgieroba.flycierge.model.exception.ExternalServiceOriginNotSupportedException;
 import com.mgieroba.flycierge.model.search.Search;
 import com.mgieroba.flycierge.model.search.SearchResult;
+import com.mgieroba.flycierge.service.FlightSearchResponseCache;
 import com.mgieroba.flycierge.service.amadeus.AmadeusService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,6 +26,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(
@@ -68,6 +73,13 @@ public class FlightSearchTests extends BasicIntegrationTest {
         .departureDate(LocalDate.parse("2024-09-10"))
         .build();
 
+    @BeforeEach
+    public void reset() {
+        Mockito.reset(amadeusService);
+        FlightSearchResponseCache cache = new FlightSearchResponseCache();
+        ReflectionTestUtils.setField(api, "responseCache", cache);
+    }
+
     @Test
     public void basicSearchTest() throws Exception {
         insertAirportsAndAirlinesFromItineraries(exampleReturnedData);
@@ -98,5 +110,18 @@ public class FlightSearchTests extends BasicIntegrationTest {
         assertEquals(2, db.sql("SELECT COUNT(*) FROM flight").query(Long.class).single());
         assertEquals(1, db.sql("SELECT COUNT(*) FROM itinerary").query(Long.class).single());
         assertEquals(2, db.sql("SELECT COUNT(*) FROM itinerary_flight").query(Long.class).single());
+    }
+
+    @Test
+    public void basicSearchResultCachingTest() throws Exception {
+        insertAirportsAndAirlinesFromItineraries(exampleReturnedData);
+        when(amadeusService.findOffers(any())).thenReturn(exampleReturnedData);
+        when(amadeusService.getPriceMetric(any())).thenThrow(ExternalServiceOriginNotSupportedException.class);
+
+        api.search(exampleSearch);
+        api.search(exampleSearch);
+        api.search(exampleSearch);
+
+        Mockito.verify(amadeusService, times(1)).findOffers(any());
     }
 }
