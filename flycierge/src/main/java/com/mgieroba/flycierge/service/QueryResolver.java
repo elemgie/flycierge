@@ -51,8 +51,17 @@ public class QueryResolver {
                 if (search.isFindNearestToOrigin()) {
                     originIatas = airportResolverService.getIataOfRelevantAirportsByRadius(airportRepository.findByIata(search.getOrigin()), 250);
                 }
+                final List<String> finalOriginIatas = originIatas.stream().toList();
                 if (search.isFindNearestToDestination()) {
                     destinationIatas = airportResolverService.getIataOfRelevantAirportsByRadius(airportRepository.findByIata(search.getDestination()), 250);
+                    destinationIatas = destinationIatas.stream().filter(iata -> {
+                        for (String originIata : finalOriginIatas) {
+                            if (iata.equals(originIata)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }).toList();
                 }
                 ArrayList<RichItinerary> itineraries = new ArrayList<>();
                 for (String originIata: originIatas) {
