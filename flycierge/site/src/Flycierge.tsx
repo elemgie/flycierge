@@ -67,7 +67,8 @@ function Flycierge() {
 []);
 
 const earliestDepartureTimeSorter = useCallback((a: Itinerary, b: Itinerary) =>
-    a.outboundFlights[0].startDateTime.diff(b.outboundFlights[0].startDateTime),
+    a.outboundFlights[0].startDateTime.isBefore(b.outboundFlights[0].startDateTime) ? -1 :
+      (a.outboundFlights[0].startDateTime.isAfter(b.outboundFlights[0].startDateTime) ? 1 : 0),
 []);
 
 const latestDepartureTimeSorter = useCallback((a: Itinerary, b: Itinerary) =>
@@ -88,7 +89,6 @@ const sorterFunc = useMemo(() => {
     if (!filterFunc || !sorterFunc || !searchResult|| searchResult.itineraries.length === 0) {
       return searchResult;
     }
-
     const processedItineraries = searchResult.itineraries.filter(filterFunc).sort(sorterFunc);
     return { ...searchResult, itineraries: processedItineraries };
   }, [searchResult, sorterFunc, filterFunc]);
