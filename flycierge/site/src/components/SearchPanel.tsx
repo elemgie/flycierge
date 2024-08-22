@@ -203,6 +203,7 @@ function PureDestinationSearchPanel({ isFetching, setIsFetching, setSearchResult
     const [isReturnSelectString, setIsReturnSelectString] = useState<string>('one-way');
     const [adultNumber, setAdultNumber] = useState<number>(1);
     const [datePickerError, setDatePickerError] = useState<string | null>(null);
+    const [findNearestOrigins, setFindNearestOrigins] = useState<boolean>(false);
 
     const handleIsReturnNumberChange = useCallback((event: SelectChangeEvent) => {
         setIsReturnSelectString(event.target.value);
@@ -217,6 +218,9 @@ function PureDestinationSearchPanel({ isFetching, setIsFetching, setSearchResult
 
     const handleDepartureDateRangeEndChange = useCallback((date: Moment | null) =>
         setDepartureDateRangeEnd(date), []);
+
+    const handleFindNearestOriginsChange = useCallback((_evt: any, checked: boolean) =>
+        setFindNearestOrigins(checked), []);
 
     const validateOrigin = useMemo(() => !!airportsMap[origin], [airportsMap, origin]);
 
@@ -237,7 +241,8 @@ function PureDestinationSearchPanel({ isFetching, setIsFetching, setSearchResult
     const handleSearchClick = useCallback(() => {
         if (departureDateRangeStart && departureDateRangeEnd) {
             handleSearch({origin, departureRangeEnd: departureDateRangeEnd.format('YYYY-MM-DD'),
-                departureRangeStart: departureDateRangeStart.format('YYYY-MM-DD'), adultNumber, isReturn});
+                departureRangeStart: departureDateRangeStart.format('YYYY-MM-DD'), adultNumber, isReturn,
+                findNearestToOrigin: findNearestOrigins});
             }
     }, [origin, departureDateRangeStart, departureDateRangeEnd, isReturn, adultNumber, handleSearch]);
 
@@ -258,6 +263,9 @@ function PureDestinationSearchPanel({ isFetching, setIsFetching, setSearchResult
                 </Grid>
                 <Grid item width="24%">
                     <AirportChooser label="From" value={origin} onChange={handleOriginChange}/>
+                    <FormControlLabel label='Add nearby airports' control={
+                        <Checkbox value={findNearestOrigins} onChange={handleFindNearestOriginsChange}/>
+                    }/>
                 </Grid>
                 <Grid item className={classes.datePicker}>
                     <DatePicker label="Departure range start"

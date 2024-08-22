@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface FlightSearchService {
     List<RichItinerary> findOffers(Search search);
-    List<RichItinerary> findMultipleParamsOffers(Search search, List<String> originIatas, List<String> destinationIatas);
 }

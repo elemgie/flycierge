@@ -16,6 +16,7 @@ export type DestinationSearchParams = {
     departureRangeEnd: string;
     adultNumber: number;
     isReturn: boolean;
+    findNearestToOrigin: boolean;
 }
 
 export type SearchResult = {

@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -62,19 +61,6 @@ public class AmadeusService implements FlightSearchService, PriceMetricSearchSer
         } catch (ResponseException exc) {
             throw new RuntimeException(exc);
         }
-    }
-
-    public List<RichItinerary> findMultipleParamsOffers(Search search, List<String> originIatas, List<String> destinationIatas) {
-        ArrayList<RichItinerary> results = new ArrayList<>();
-        for (String originIata: originIatas) {
-            for (String destinationIata: destinationIatas) {
-                search.setOrigin(originIata);
-                search.setDestination(destinationIata);
-                List<RichItinerary> result = findOffers(search);
-                results.addAll(result);
-            }
-        }
-        return results;
     }
 
     public RoutePriceMetric getPriceMetric(Search search) throws ExternalServiceOriginNotSupportedException {

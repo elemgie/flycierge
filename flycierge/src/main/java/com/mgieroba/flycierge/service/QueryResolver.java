@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -53,7 +54,15 @@ public class QueryResolver {
                 if (search.isFindNearestToDestination()) {
                     destinationIatas = airportResolverService.getIataOfRelevantAirportsByRadius(airportRepository.findByIata(search.getDestination()), 250);
                 }
-                List<RichItinerary> itineraries = flightSearchService.findMultipleParamsOffers(search, originIatas, destinationIatas);
+                ArrayList<RichItinerary> itineraries = new ArrayList<>();
+                for (String originIata: originIatas) {
+                    for (String destinationIata: destinationIatas) {
+                        search.setOrigin(originIata);
+                        search.setDestination(destinationIata);
+                        List<RichItinerary> result = flightSearchService.findOffers(search);
+                        itineraries.addAll(result);
+                    }
+                }
                 return saveItineraries(itineraries);
             } catch (RuntimeException exc) {
                 log.error("Error while searching for flights for search id: {}", search.getSearchId(), exc);
@@ -63,7 +72,17 @@ public class QueryResolver {
     }
 
     public List<RichItinerary> findDestinations(DestinationSearch search) {
-        return internalDestinationSearchService.findDestinations(search);
+        List<String> originIatas = List.of(search.getOrigin());
+        if (search.isFindNearestToOrigin()) {
+            originIatas = airportResolverService.getIataOfRelevantAirportsByRadius(airportRepository.findByIata(search.getOrigin()), 250);
+        }
+
+        ArrayList<RichItinerary> itineraries = new ArrayList<>();
+        for (String origin: originIatas) {
+            search.setOrigin(origin);
+            itineraries.addAll(internalDestinationSearchService.findDestinations(search));
+        }
+        return itineraries;
     }
 
     public CompletableFuture<RoutePriceMetric> calculateRoutePriceMetricsForSearch(Search search) {

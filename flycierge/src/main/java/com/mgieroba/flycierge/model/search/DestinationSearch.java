@@ -15,6 +15,7 @@ public class DestinationSearch {
     private String origin;
     private LocalDate departureRangeStart;
     private LocalDate departureRangeEnd;
+    private boolean findNearestToOrigin;
     @Setter(AccessLevel.NONE) private boolean isReturn;
     private long createTs;
 
