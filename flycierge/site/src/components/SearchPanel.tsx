@@ -244,7 +244,7 @@ function PureDestinationSearchPanel({ isFetching, setIsFetching, setSearchResult
                 departureRangeStart: departureDateRangeStart.format('YYYY-MM-DD'), adultNumber, isReturn,
                 findNearestToOrigin: findNearestOrigins});
             }
-    }, [origin, departureDateRangeStart, departureDateRangeEnd, isReturn, adultNumber, handleSearch]);
+    }, [origin, departureDateRangeStart, departureDateRangeEnd, isReturn, adultNumber, handleSearch, findNearestOrigins]);
 
     const [openDepartureDatePicker, setOpenDepartureDatePicker] = useState(false);
     const [openReturnDatePicker, setOpenReturnDatePicker] = useState(false);
