@@ -15,6 +15,8 @@ public class Search {
     private String destination;
     private LocalDate departureDate;
     private LocalDate returnDate;
+    private boolean findNearestToOrigin;
+    private boolean findNearestToDestination;
     private int adultNumber;
     private long createTs;
 

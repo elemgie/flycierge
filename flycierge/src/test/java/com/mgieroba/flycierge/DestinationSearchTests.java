@@ -33,8 +33,6 @@ public class DestinationSearchTests extends BasicIntegrationTest {
         assertEquals(1, matchedResult.getItineraries().size());
         assertNull(matchedResult.getPriceMetric());
 
-        System.out.println(exampleSearch.getDepartureDate().plusDays(1));
-
         DestinationSearch notMatchingDestinationSearch = DestinationSearch.builder()
             .origin(exampleSearch.getOrigin())
             .departureRangeStart(exampleSearch.getDepartureDate().plusDays(1))

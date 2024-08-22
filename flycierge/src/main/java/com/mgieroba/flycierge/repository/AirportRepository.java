@@ -34,18 +34,15 @@ public class AirportRepository {
             .update();
     }
 
-    public List<Airport> findByAnyLocationParam(String keyword) {
+    public Airport findByIata(String origin) {
         String sql = """
             SELECT * FROM airport
-            WHERE name ILIKE :filter
-            OR city ILIKE :filter
-            OR country ILIKE :filter
-            OR iata_code ILIKE :filter
+            WHERE iata_code = :origin
             """;
         return db.sql(sql)
-            .param("filter", '%' + keyword + '%')
+            .param("origin", origin)
             .query(Airport.class)
-            .list();
+            .single();
     }
 
     public List<Airport> findAll() {

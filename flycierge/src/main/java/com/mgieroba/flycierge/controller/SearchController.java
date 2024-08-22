@@ -40,17 +40,22 @@ public class SearchController {
         searchRequest.setCreateTs(getNowTs());
         Search search = searchRepository.create(searchRequest);
         airportRepository.bumpSearchCount(searchRequest.getOrigin());
+        airportRepository.bumpSearchCount(searchRequest.getDestination());
 
         Optional<SearchResult> maybeCachedResult = responseCache.getFor(search);
         if (maybeCachedResult.isPresent()) {
             return maybeCachedResult.get();
         }
 
+
         CompletableFuture<List<RichItinerary>> itinerariesFuture = queryResolver.findItineraries(search);
-        CompletableFuture<RoutePriceMetric> priceMetricsFuture = queryResolver.calculateRoutePriceMetricsForSearch(search);
+        CompletableFuture<RoutePriceMetric> priceMetricsFuture = search.isFindNearestToOrigin() || search.isFindNearestToDestination() ?
+        CompletableFuture.completedFuture(null) : queryResolver.calculateRoutePriceMetricsForSearch(search);
 
         SearchResult result = new SearchResult(itinerariesFuture.join(), priceMetricsFuture.join());
-        responseCache.put(search, result);
+        if (!result.getItineraries().isEmpty()) {
+            responseCache.put(search, result);
+        }
         return result;
     }
 

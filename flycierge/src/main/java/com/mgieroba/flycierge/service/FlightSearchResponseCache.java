@@ -26,6 +26,8 @@ public class FlightSearchResponseCache {
         private final LocalDate departureDate;
         private final LocalDate returnDate;
         private final int adultNumber;
+        private final boolean findNearestToOrigin;
+        private final boolean findNearestToDestination;
 
         public SearchParams(Search search) {
             this.origin = search.getOrigin();
@@ -33,6 +35,8 @@ public class FlightSearchResponseCache {
             this.departureDate = search.getDepartureDate();
             this.returnDate = search.getReturnDate();
             this.adultNumber = search.getAdultNumber();
+            this.findNearestToOrigin = search.isFindNearestToOrigin();
+            this.findNearestToDestination = search.isFindNearestToDestination();
             }
         }
 

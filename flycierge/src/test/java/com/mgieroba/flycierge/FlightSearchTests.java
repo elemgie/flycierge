@@ -21,7 +21,6 @@ import static org.mockito.Mockito.when;
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
     classes = Server.class)
 @AutoConfigureMockMvc
-@TestPropertySource(locations = "classpath:application.test.properties")
 public class FlightSearchTests extends BasicIntegrationTest {
 
     @BeforeEach
