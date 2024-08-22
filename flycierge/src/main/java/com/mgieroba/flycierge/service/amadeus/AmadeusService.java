@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +101,11 @@ public class AmadeusService implements FlightSearchService, PriceMetricSearchSer
                 .and("radius", distance);
 
             Location[] locations = amadeus.referenceData.locations.airports.get(params);
-            return Arrays.stream(locations).map(Location::getIataCode).limit(3).toList();
+            List<String> foundRelevant = Arrays.stream(locations).map(Location::getIataCode).filter(iata -> !iata.equals(origin.getIataCode())).limit(2).toList();
+            List<String> response = new ArrayList<>();
+            response.add(origin.getIataCode());
+            response.addAll(foundRelevant);
+            return response;
         } catch (ResponseException exc) {
             log.error("Exception during search for nearest airports", exc);
             return List.of(origin.getIataCode());
