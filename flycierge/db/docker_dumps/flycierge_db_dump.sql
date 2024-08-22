@@ -163,7 +163,9 @@ CREATE TABLE public.search (
     departure_date timestamp without time zone NOT NULL,
     return_date timestamp without time zone,
     adult_number integer NOT NULL,
-    create_ts bigint DEFAULT EXTRACT(epoch FROM now()) NOT NULL
+    create_ts bigint DEFAULT EXTRACT(epoch FROM now()) NOT NULL,
+    find_nearest_to_origin BOOLEAN NOT NULL DEFAULT false,
+    find_nearest_to_destination BOOLEAN NOT NULL DEFAULT false
 );
 
 
