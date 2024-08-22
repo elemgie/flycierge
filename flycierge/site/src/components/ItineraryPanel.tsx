@@ -44,7 +44,6 @@ interface ItineraryPanelProps {
 
 function PureItineraryPanel ( { itineraries, isFetching, showFullDates } : ItineraryPanelProps) {
     const { classes, cx } = useStyles();
-    const itineraryComparator = useCallback((a: Itinerary, b: Itinerary) => a.price.value - b.price.value, []);
 
     const [dialogItinerary, setDialogItinerary] = useState<Itinerary | null>(null);
 
@@ -74,7 +73,7 @@ function PureItineraryPanel ( { itineraries, isFetching, showFullDates } : Itine
 
     return <Box className={classes.mainPanel}>
         <List className={classes.itineraryList}>
-            {itineraries.sort(itineraryComparator).map(it => <ListItem id={it.itineraryId + ''}>
+            {itineraries.map(it => <ListItem id={it.itineraryId + ''}>
                 <ItineraryCard
                     itinerary={it}
                     showFullDates={showFullDates}
