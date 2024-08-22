@@ -5,12 +5,15 @@ import com.amadeus.Params;
 import com.amadeus.exceptions.ResponseException;
 import com.amadeus.resources.FlightOfferSearch;
 import com.amadeus.resources.ItineraryPriceMetric;
+import com.amadeus.resources.Location;
+import com.mgieroba.flycierge.model.Airport;
 import com.mgieroba.flycierge.model.Flight;
 import com.mgieroba.flycierge.model.Price;
 import com.mgieroba.flycierge.model.RichItinerary;
 import com.mgieroba.flycierge.model.RoutePriceMetric;
 import com.mgieroba.flycierge.model.exception.ExternalServiceOriginNotSupportedException;
 import com.mgieroba.flycierge.model.search.Search;
+import com.mgieroba.flycierge.service.AirportResolverService;
 import com.mgieroba.flycierge.service.FlightSearchService;
 import com.mgieroba.flycierge.service.PriceMetricSearchService;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class AmadeusService implements FlightSearchService, PriceMetricSearchService {
+public class AmadeusService implements FlightSearchService, PriceMetricSearchService, AirportResolverService {
 
     private final Amadeus amadeus;
     private final String AMADEUS_NOT_SUPPORTED_ROUTE_CODE = "22443";
@@ -60,6 +64,19 @@ public class AmadeusService implements FlightSearchService, PriceMetricSearchSer
         }
     }
 
+    public List<RichItinerary> findMultipleParamsOffers(Search search, List<String> originIatas, List<String> destinationIatas) {
+        ArrayList<RichItinerary> results = new ArrayList<>();
+        for (String originIata: originIatas) {
+            for (String destinationIata: destinationIatas) {
+                search.setOrigin(originIata);
+                search.setDestination(destinationIata);
+                List<RichItinerary> result = findOffers(search);
+                results.addAll(result);
+            }
+        }
+        return results;
+    }
+
     public RoutePriceMetric getPriceMetric(Search search) throws ExternalServiceOriginNotSupportedException {
         try {
             Params amadeusRequestParams = Params
@@ -86,6 +103,21 @@ public class AmadeusService implements FlightSearchService, PriceMetricSearchSer
             } else {
                 throw new RuntimeException(exc);
             }
+        }
+    }
+
+    public List<String> getIataOfRelevantAirportsByRadius(Airport origin, long distance) {
+        try {
+            Params params = Params
+                .with("latitude", origin.getLatitude())
+                .and("longitude", origin.getLongitude())
+                .and("radius", distance);
+
+            Location[] locations = amadeus.referenceData.locations.airports.get(params);
+            return Arrays.stream(locations).map(Location::getIataCode).limit(3).toList();
+        } catch (ResponseException exc) {
+            log.error("Exception during search for nearest airports", exc);
+            return List.of(origin.getIataCode());
         }
     }
 

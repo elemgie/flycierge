@@ -8,6 +8,8 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 import moment, { Moment } from 'moment';
 
@@ -20,7 +22,8 @@ const useStyles = tss.create({
         '> div > div': {
             backgroundColor: 'white'
         },
-        alignItems: 'center',
+        alignItems: 'start',
+        justifyContent: 'center',
         width: '60vw',
         marginTop: 8,
     },
@@ -64,6 +67,8 @@ function PureFlightSearchPanel({ isFetching, setIsFetching, setSearchResult } : 
     const [returnDate, setReturnDate] = useState<Moment | null>(null);
     const [datePickerError, setDatePickerError] = useState<string | null>(null);
     const [adultNumber, setAdultNumber] = useState<number>(1);
+    const [findNearestOrigins, setFindNearestOrigins] = useState<boolean>(false);
+    const [findNearestDestinations, setFindNearestDestinations] = useState<boolean>(false);
 
 
     const handleOriginChange = useCallback((input: string) =>
@@ -75,6 +80,10 @@ function PureFlightSearchPanel({ isFetching, setIsFetching, setSearchResult } : 
     const handleDepartureDateChange = useCallback((date: Moment | null) => setDepartureDate(date), []);
 
     const handleReturnDateChange = useCallback((date: Moment | null) => setReturnDate(date), []);
+
+    const handleNearestOriginsChange = useCallback((_evt: any, checked: boolean) => setFindNearestOrigins(checked), []);
+
+    const handleNearestDestinationChange = useCallback((_evt: any, checked: boolean) => setFindNearestDestinations(checked), []);
 
     const validateOrigin = useMemo(() => !!airportsMap[origin], [airportsMap, origin]);
 
@@ -98,9 +107,10 @@ function PureFlightSearchPanel({ isFetching, setIsFetching, setSearchResult } : 
     const handleSearchClick = useCallback(() => {
         if (departureDate) {
             handleSearch({origin, destination, departureDate: departureDate.format('YYYY-MM-DD'),
-                returnDate: returnDate?.format('YYYY-MM-DD') || null, adultNumber});
+                returnDate: returnDate?.format('YYYY-MM-DD') || null, adultNumber,
+                findNearestToOrigin: findNearestOrigins, findNearestToDestination: findNearestDestinations});
             }
-    }, [origin, destination, departureDate, returnDate, adultNumber, handleSearch]);
+    }, [origin, destination, departureDate, returnDate, adultNumber, handleSearch, findNearestOrigins, findNearestDestinations]);
 
     const [openDepartureDatePicker, setOpenDepartureDatePicker] = useState(false);
     const [openReturnDatePicker, setOpenReturnDatePicker] = useState(false);
@@ -113,9 +123,15 @@ function PureFlightSearchPanel({ isFetching, setIsFetching, setSearchResult } : 
             <Grid container wrap="nowrap" direction="row" spacing={1} className={classes.mainGrid}>
                 <Grid item width="24%">
                     <AirportChooser label="From" value={origin} onChange={handleOriginChange}/>
+                    <FormControlLabel label='Add nearby airports' control={
+                        <Checkbox value={findNearestOrigins} onChange={handleNearestOriginsChange}/>
+                    }/>
                 </Grid>
-                <Grid item width="24%">
+                <Grid item width="24%" flexDirection='column'>
                     <AirportChooser label="To" value={destination} onChange={handleDestinationChange}/>
+                    <FormControlLabel label='Add nearby airports' control={
+                        <Checkbox value={findNearestDestinations} onChange={handleNearestDestinationChange}/>
+                    }/>
                 </Grid>
                 <Grid item className={classes.datePicker}>
                     <DatePicker label="Departure date"

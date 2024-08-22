@@ -6,6 +6,8 @@ export type SimpleSearchParams = {
     departureDate: string;
     returnDate: string | null;
     adultNumber: number;
+    findNearestToOrigin: boolean;
+    findNearestToDestination: boolean;
 }
 
 export type DestinationSearchParams = {

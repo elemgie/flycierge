@@ -31,7 +31,7 @@ const useStyles = tss.create({
         padding: 8
     },
     itineraryList: {
-        maxHeight: '68vh',
+        maxHeight: '67vh',
         overflowY: 'scroll'
     }
 })

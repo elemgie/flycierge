@@ -21,8 +21,10 @@ public class SearchRepository {
 
     public Search create(Search search) {
         String sql = """
-            INSERT INTO search(origin, destination, departure_date, return_date, adult_number, create_ts)
-            VALUES (:origin, :destination, :departure_date, :return_date, :adult_number, :create_ts)
+            INSERT INTO search(origin, destination, departure_date, return_date, adult_number, create_ts,
+                find_nearest_to_origin, find_nearest_to_destination)
+            VALUES (:origin, :destination, :departure_date, :return_date, :adult_number, :create_ts,
+                :find_nearest_to_origin, :find_nearest_to_destination)
             RETURNING *
             """;
         return db.sql(sql)
@@ -31,7 +33,9 @@ public class SearchRepository {
                 "destination", search.getDestination(),
                 "departure_date", search.getDepartureDate(),
                 "adult_number", search.getAdultNumber(),
-                "create_ts", search.getCreateTs()
+                "create_ts", search.getCreateTs(),
+                "find_nearest_to_origin", search.isFindNearestToOrigin(),
+                "find_nearest_to_destination", search.isFindNearestToDestination()
             ))
             .param("return_date", search.getReturnDate())
             .query(Search.class)

@@ -8,6 +8,7 @@ import com.mgieroba.flycierge.model.RoutePriceMetric;
 import com.mgieroba.flycierge.model.exception.ExternalServiceOriginNotSupportedException;
 import com.mgieroba.flycierge.model.search.DestinationSearch;
 import com.mgieroba.flycierge.model.search.Search;
+import com.mgieroba.flycierge.repository.AirportRepository;
 import com.mgieroba.flycierge.repository.FlightRepository;
 import com.mgieroba.flycierge.repository.ItineraryRepository;
 import com.mgieroba.flycierge.repository.PriceRepository;
@@ -32,17 +33,27 @@ public class QueryResolver {
     private final FlightSearchService flightSearchService;
     private final DestinationSearchService internalDestinationSearchService;
     private final PriceMetricSearchService priceMetricSearchService;
+    private final AirportResolverService airportResolverService;
     private final ItineraryRepository itineraryRepository;
     private final FlightRepository flightRepository;
     private final PriceRepository priceRepository;
     private final RoutePriceMetricRepository routePriceMetricRepository;
+    private final AirportRepository airportRepository;
 
     private final long ROUTE_PRICE_METRIC_MAX_AGE = Duration.ofDays(3).toSeconds();
 
     public CompletableFuture<List<RichItinerary>> findItineraries(Search search) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                List<RichItinerary> itineraries = flightSearchService.findOffers(search);
+                List<String> originIatas = List.of(search.getOrigin());
+                List<String> destinationIatas = List.of(search.getDestination());
+                if (search.isFindNearestToOrigin()) {
+                    originIatas = airportResolverService.getIataOfRelevantAirportsByRadius(airportRepository.findByIata(search.getOrigin()), 250);
+                }
+                if (search.isFindNearestToDestination()) {
+                    destinationIatas = airportResolverService.getIataOfRelevantAirportsByRadius(airportRepository.findByIata(search.getDestination()), 250);
+                }
+                List<RichItinerary> itineraries = flightSearchService.findMultipleParamsOffers(search, originIatas, destinationIatas);
                 return saveItineraries(itineraries);
             } catch (RuntimeException exc) {
                 log.error("Error while searching for flights for search id: {}", search.getSearchId(), exc);
