@@ -177,7 +177,7 @@ function PureFlightSearchPanel({ isFetching, setIsFetching, setSearchResult } : 
                         }}
                     />
                 </Grid>
-                <Grid item>
+                <Grid item marginTop='1vh'>
                     <Button
                         variant="contained"
                         disabled={!isSearchValid || isFetching}
@@ -311,7 +311,7 @@ function PureDestinationSearchPanel({ isFetching, setIsFetching, setSearchResult
                         }}
                     />
                 </Grid>
-                <Grid item>
+                <Grid item marginTop='1vh'>
                     <Button
                         variant="contained"
                         disabled={!isSearchValid || isFetching}
