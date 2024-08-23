@@ -1,5 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 import { tss } from 'tss-react';
+import moment from 'moment-timezone';
 
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
@@ -10,7 +11,7 @@ import Typography from '@mui/material/Typography';
 
 import { Itinerary, Flight } from 'models';
 import { AirportContext, AirlineContext } from 'components';
-import { timeElapsedString } from 'utils';
+import { timeElapsedString, getTimeZoneAdjustedTimeDiff } from 'utils';
 
 const useStyles = tss.create({
     dialogContent: {
@@ -59,8 +60,14 @@ function PureFlightCard({ flight }: FlightCardProps) {
     const airlinesMap = useContext(AirlineContext);
     const airportsMap = useContext(AirportContext);
 
-    const flightDurationString = useMemo(() => 
-        timeElapsedString(flight.landingDateTime.diff(flight.startDateTime, 's')), [flight]);
+    const flightDurationString = useMemo(() => {
+        const timeDiff = getTimeZoneAdjustedTimeDiff(
+            flight.startDateTime,
+            airportsMap[flight.origin].timeZoneRegionName,
+            flight.landingDateTime,
+            airportsMap[flight.destination].timeZoneRegionName);
+        return timeElapsedString(timeDiff);
+    }, [flight]);
 
     return <Box className={classes.flightCard}>
         <Box display='flex' flexDirection='column'>
@@ -109,8 +116,11 @@ function PureOneWayFlightsCard({ flights }: OneWayFlightsCardProps) {
     const lastFlight = flights[flights.length - 1];
     const routeOrigin = airportsMap[flights[0].origin];
     const routeDestination = airportsMap[lastFlight.destination];
-    const durationString = timeElapsedString(
-        lastFlight.landingDateTime.diff(flights[0].startDateTime, 's'));
+    const durationString = timeElapsedString(getTimeZoneAdjustedTimeDiff(
+        flights[0].startDateTime,
+        airportsMap[flights[0].origin].timeZoneRegionName,
+        lastFlight.landingDateTime,
+        airportsMap[lastFlight.destination].timeZoneRegionName));
 
     return <Box className={classes.itineraryCard}>
         <Box className={classes.rowHeader}>

@@ -10,7 +10,7 @@ import Stack from '@mui/material/Stack';
 import Card from '@mui/material/Card';
 
 import { Itinerary, Flight } from 'models';
-import { timeElapsedString } from 'utils';
+import { timeElapsedString, getTimeZoneAdjustedTimeDiff } from 'utils';
 import { AirportContext, AirlineContext } from 'components';
 import { CardActionArea } from '@mui/material';
 
@@ -131,10 +131,14 @@ function PureOneWayFlightsCard({ flights, showFullDates }: OneWayFlightsCardProp
         (it, idx) => idx === 0 || it.airline !== flights[idx - 1].airline)
         .map(it => airlinesMap[it.airline]?.name || it.airline), [flights, airlinesMap]);
         
-    const tripDurationSeconds = useMemo(() => 
-        flights[flights.length - 1].landingDateTime.diff(flights[0].startDateTime, 'seconds'), [flights]);
-
     const lastFlight = useMemo(() => flights[flights.length - 1], [flights]);
+    const tripDurationString = useMemo(() =>
+        timeElapsedString(getTimeZoneAdjustedTimeDiff(
+            flights[0].startDateTime,
+            airportsMap[flights[0].origin].timeZoneRegionName,
+            lastFlight.landingDateTime,
+            airportsMap[lastFlight.destination].timeZoneRegionName)),
+        [flights]);
 
     const dateFormat = useMemo(() => showFullDates ? "DD/MM HH:mm" : "HH:mm", [showFullDates]);
 
@@ -161,7 +165,7 @@ function PureOneWayFlightsCard({ flights, showFullDates }: OneWayFlightsCardProp
                 </Box>
                 <Box className={classes.schedules}>
                     <Typography display='flex'>{flights[0].startDateTime.format(dateFormat)}</Typography>
-                    <Typography variant='caption' color='grey'>{timeElapsedString(tripDurationSeconds)}</Typography>
+                    <Typography variant='caption' color='grey'>{tripDurationString}</Typography>
                     <Typography display='flex'>{lastFlight.landingDateTime.format(dateFormat)}</Typography>
                 </Box>
         </Box>
