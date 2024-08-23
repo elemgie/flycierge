@@ -1,6 +1,5 @@
 import React, { useContext, useMemo } from 'react';
 import { tss } from 'tss-react';
-import moment from 'moment-timezone';
 
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
@@ -67,7 +66,7 @@ function PureFlightCard({ flight }: FlightCardProps) {
             flight.landingDateTime,
             airportsMap[flight.destination].timeZoneRegionName);
         return timeElapsedString(timeDiff);
-    }, [flight]);
+    }, [flight, airportsMap]);
 
     return <Box className={classes.flightCard}>
         <Box display='flex' flexDirection='column'>

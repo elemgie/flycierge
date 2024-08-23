@@ -138,7 +138,7 @@ function PureOneWayFlightsCard({ flights, showFullDates }: OneWayFlightsCardProp
             airportsMap[flights[0].origin].timeZoneRegionName,
             lastFlight.landingDateTime,
             airportsMap[lastFlight.destination].timeZoneRegionName)),
-        [flights]);
+        [flights, airportsMap, lastFlight]);
 
     const dateFormat = useMemo(() => showFullDates ? "DD/MM HH:mm" : "HH:mm", [showFullDates]);
 
